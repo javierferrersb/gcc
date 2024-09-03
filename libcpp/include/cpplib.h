@@ -98,6 +98,8 @@ class rich_location;
   OP(HASH,		"#")	/* digraphs */				\
   OP(PASTE,		"##")						\
   OP(OPEN_SQUARE,	"[")						\
+  OP(LEXPR, "[[")                                                    \
+  OP(REXPR, "]]")                                                    \
   OP(CLOSE_SQUARE,	"]")						\
   OP(OPEN_BRACE,	"{")						\
   OP(CLOSE_BRACE,	"}")						\
