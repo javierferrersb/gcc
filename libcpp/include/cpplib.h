@@ -97,9 +97,9 @@ class rich_location;
   /* Digraphs together, beginning with CPP_FIRST_DIGRAPH.  */		\
   OP(HASH,		"#")	/* digraphs */				\
   OP(PASTE,		"##")						\
-  OP(OPEN_SQUARE,	"[")						\
   OP(LEXPR, "[[")                                                    \
   OP(REXPR, "]]")                                                    \
+  OP(OPEN_SQUARE,	"[")						\
   OP(CLOSE_SQUARE,	"]")						\
   OP(OPEN_BRACE,	"{")						\
   OP(CLOSE_BRACE,	"}")						\

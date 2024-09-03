@@ -9145,6 +9145,75 @@ c_parser_expr_no_commas (c_parser *parser, struct c_expr *after,
 */
 
 static struct c_expr
+c_parser_custom_expression(c_parser *parser)
+{
+  // Consume the LEXPR token
+  c_parser_consume_token(parser);
+
+  // Parse the first IntExpression
+  struct c_expr first_expr = c_parser_expr_no_commas(parser, NULL);
+
+  // Expect and consume the comma
+  if (!c_parser_require(parser, CPP_COMMA, "expected ','"))
+  {
+    struct c_expr error_expr;
+    error_expr.value = error_mark_node;
+    // error_expr.original_code = error_mark_node;
+    return error_expr;
+  }
+
+  // Parse the main Expression
+  struct c_expr main_expr = c_parser_expr_no_commas(parser, NULL);
+
+  // Expect and consume the comma
+  if (!c_parser_require(parser, CPP_COMMA, "expected ','"))
+  {
+    struct c_expr error_expr;
+    error_expr.value = error_mark_node;
+    // error_expr.original_code = error_mark_node;
+    return error_expr;
+  }
+
+  // Parse the second IntExpression
+  struct c_expr second_expr = c_parser_expr_no_commas(parser, NULL);
+
+  // Expect and consume the REXPR token
+  if (!c_parser_require(parser, CPP_CLOSE_SQUARE, "expected ']'") && !c_parser_require(parser, CPP_CLOSE_SQUARE, "expected ']'"))
+  {
+    struct c_expr error_expr;
+    error_expr.value = error_mark_node;
+    // error_expr.original_code = error_mark_node;
+    return error_expr;
+  }
+
+  tree first_value = first_expr.value;
+  tree second_value = second_expr.value;
+  tree result_value = NULL_TREE;
+
+  while (true)
+  {
+    // Evaluate the main expression
+    tree evaluated_expr = main_expr.value;
+
+    // Compare first and second expressions
+    if (tree_int_cst_equal(first_value, second_value))
+    {
+      result_value = evaluated_expr;
+      break;
+    }
+
+    // Increment the first expression
+    first_value = build2(PLUS_EXPR, TREE_TYPE(first_value), first_value, integer_one_node);
+  }
+
+  // Return the result
+  struct c_expr result;
+  result.value = result_value;
+  result.original_code = main_expr.original_code;
+  return result;
+}
+
+static struct c_expr
 c_parser_conditional_expression (c_parser *parser, struct c_expr *after,
 				 tree omp_atomic_lhs)
 {
@@ -9153,6 +9222,14 @@ c_parser_conditional_expression (c_parser *parser, struct c_expr *after,
   bool save_c_omp_array_section_p = c_omp_array_section_p;
 
   gcc_assert (!after || c_dialect_objc ());
+
+  if (c_parser_next_token_is(parser, CPP_OPEN_SQUARE))
+  {
+    if(c_parser_next_token_is(parser, CPP_OPEN_SQUARE))
+    {
+      return c_parser_custom_expression(parser);
+    }
+  }
 
   cond = c_parser_binary_expression (parser, after, omp_atomic_lhs);
 
@@ -10602,18 +10679,21 @@ c_parser_predefined_identifier (c_parser *parser)
      Classname . identifier
 */
 
-static struct c_expr
-c_parser_postfix_expression (c_parser *parser)
-{
-  struct c_expr expr, e1;
-  struct c_type_name *t1, *t2;
-  location_t loc = c_parser_peek_token (parser)->location;
-  source_range tok_range = c_parser_peek_token (parser)->get_range ();
-  expr.original_code = ERROR_MARK;
-  expr.original_type = NULL;
-  expr.m_decimal = 0;
-  switch (c_parser_peek_token (parser)->type)
+  static struct c_expr
+  c_parser_postfix_expression(c_parser * parser)
+  {
+    struct c_expr expr, e1;
+    struct c_type_name *t1, *t2;
+    location_t loc = c_parser_peek_token(parser)->location;
+    source_range tok_range = c_parser_peek_token(parser)->get_range();
+    expr.original_code = ERROR_MARK;
+    expr.original_type = NULL;
+    expr.m_decimal = 0;
+    switch (c_parser_peek_token(parser)->type)
     {
+/*     case CPP_LEXPR: //ADDED CODE
+      return c_parser_custom_expression(parser);
+      break; */
     case CPP_NUMBER:
       expr.value = c_parser_peek_token (parser)->value;
       set_c_expr_source_range (&expr, tok_range);
@@ -10702,6 +10782,7 @@ c_parser_postfix_expression (c_parser *parser)
 	  break;
 	}
       break;
+
     case CPP_OPEN_PAREN:
       /* A parenthesized expression, statement expression or compound
 	 literal.  */
